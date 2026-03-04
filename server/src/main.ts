@@ -6,7 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: {
       origin: true, // reflect origin (http://localhost:5173, 5174, etc.)
-      methods: ['GET', 'POST', 'OPTIONS'],
+      methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type'],
     },
   });

@@ -15,6 +15,16 @@ type LineItem = {
   quantity: number
 }
 
+type Transaction = {
+  index: number
+  timestamp: string
+  itemId: string
+  itemName: string
+  quantity: number
+  priceEach: number
+  total: number
+}
+
 const ITEMS: Item[] = [
   // mains
   { id: 'hotdog', name: 'Hot Dog', price: 3.0, category: 'main' },
@@ -40,7 +50,7 @@ function App() {
   const [cashGiven, setCashGiven] = useState<string>('')
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [view, setView] = useState<'sales' | 'totals'>('sales')
+  const [view, setView] = useState<'sales' | 'totals' | 'transactions'>('sales')
   const [sales, setSales] = useState<
     { timestamp: string; itemId: string; itemName: string; quantity: number; priceEach: number; total: number }[]
   >([])
@@ -67,6 +77,10 @@ function App() {
   } | null>(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summaryError, setSummaryError] = useState<string | null>(null)
+
+  const [transactions, setTransactions] = useState<Transaction[] | null>(null)
+  const [transactionsLoading, setTransactionsLoading] = useState(false)
+  const [transactionsError, setTransactionsError] = useState<string | null>(null)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -101,6 +115,41 @@ function App() {
     }
 
     fetchSummary()
+
+    return () => {
+      cancelled = true
+    }
+  }, [view])
+
+  useEffect(() => {
+    if (view !== 'transactions') return
+
+    let cancelled = false
+
+    const fetchTransactions = async () => {
+      try {
+        setTransactionsLoading(true)
+        setTransactionsError(null)
+        const res = await fetch('http://localhost:3001/sales')
+        if (!res.ok) throw new Error(`Sales request failed: ${res.status}`)
+        const data: Transaction[] = await res.json()
+        if (!cancelled) {
+          setTransactions(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to load sales', err)
+          setTransactionsError('Unable to load sales right now.')
+        }
+      } finally {
+        if (!cancelled) {
+          setTransactionsLoading(false)
+        }
+      }
+    }
+
+    fetchTransactions()
 
     return () => {
       cancelled = true
@@ -203,6 +252,26 @@ function App() {
     setMenuOpen(false)
   }
 
+  const goToTransactionsView = () => {
+    setView('transactions')
+    setMenuOpen(false)
+  }
+
+  const handleDeleteTransaction = async (index: number) => {
+    const confirmed = window.confirm('Are you sure you want to delete this sale?')
+    if (!confirmed) return
+
+    try {
+      await fetch(`http://localhost:3001/sales/${index}`, {
+        method: 'DELETE',
+      })
+      setTransactions((prev) => (prev ? prev.filter((t) => t.index !== index) : prev))
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to delete sale', err)
+    }
+  }
+
   return (
     <div className="app-root">
       <header className="app-header">
@@ -232,6 +301,14 @@ function App() {
                 disabled={view === 'totals'}
               >
                 Totals screen
+              </button>
+              <button
+                type="button"
+                className="menu-item"
+                onClick={goToTransactionsView}
+                disabled={view === 'transactions'}
+              >
+                Transactions
               </button>
               <button
                 type="button"
@@ -402,7 +479,7 @@ function App() {
             </div>
           </section>
         </main>
-      ) : (
+      ) : view === 'totals' ? (
         <main className="layout totals-layout">
           <section className="items-panel">
             <h2>Totals</h2>
@@ -442,6 +519,53 @@ function App() {
             )}
             {!summaryLoading && !summaryError && !summary && (
               <p className="empty-cart">No summary yet. Record a sale first.</p>
+            )}
+          </section>
+        </main>
+      ) : (
+        <main className="layout totals-layout">
+          <section className="items-panel">
+            <h2>Transactions</h2>
+            {transactionsLoading && <p className="empty-cart">Loading sales…</p>}
+            {transactionsError && <p className="warning">{transactionsError}</p>}
+            {!transactionsLoading && !transactionsError && transactions && transactions.length > 0 && (
+              <div className="totals-panel">
+                <table className="cart-table">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Each</th>
+                      <th>Total</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((t) => (
+                      <tr key={t.index}>
+                        <td>{new Date(t.timestamp).toLocaleTimeString()}</td>
+                        <td>{t.itemName}</td>
+                        <td>{t.quantity}</td>
+                        <td>{formatCurrency(t.priceEach)}</td>
+                        <td>{formatCurrency(t.total)}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="small-button"
+                            onClick={() => handleDeleteTransaction(t.index)}
+                          >
+                            ×
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {!transactionsLoading && !transactionsError && (!transactions || transactions.length === 0) && (
+              <p className="empty-cart">No sales recorded yet.</p>
             )}
           </section>
         </main>

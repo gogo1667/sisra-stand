@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 
 type SaleLineDto = {
@@ -17,6 +17,18 @@ export class AppController {
   @Post('sales')
   recordSale(@Body() body: { lines: SaleLineDto[] }) {
     this.appService.appendSale(body.lines || []);
+    return { ok: true };
+  }
+
+  @Get('sales')
+  getSales() {
+    return this.appService.getSales();
+  }
+
+  @Delete('sales/:index')
+  deleteSale(@Param('index') index: string) {
+    const numeric = Number(index);
+    this.appService.deleteSale(Number.isFinite(numeric) ? numeric : -1);
     return { ok: true };
   }
 

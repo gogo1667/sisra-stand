@@ -51,6 +51,76 @@ export class AppService {
     fs.appendFileSync(file, toWrite, { encoding: 'utf8' });
   }
 
+  getSales() {
+    const file = this.getTodayFilename();
+    if (!fs.existsSync(file)) {
+      return [];
+    }
+
+    const content = fs.readFileSync(file, 'utf8');
+    const lines = content.trim().split('\n');
+    if (lines.length <= 1) {
+      return [];
+    }
+
+    const result: (SaleLine & { index: number })[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i];
+      if (!row.trim()) continue;
+      const cols = this.parseCsvRow(row);
+      if (cols.length < 6) continue;
+
+      const quantity = Number(cols[3] || '0');
+      const priceEach = Number(cols[4] || '0');
+      const total = Number(cols[5] || '0');
+
+      if (!Number.isFinite(quantity) || !Number.isFinite(priceEach) || !Number.isFinite(total)) continue;
+
+      result.push({
+        index: i - 1, // data index (excluding header)
+        timestamp: cols[0],
+        itemId: cols[1],
+        itemName: cols[2],
+        quantity,
+        priceEach,
+        total,
+      });
+    }
+
+    return result;
+  }
+
+  deleteSale(index: number): void {
+    if (!Number.isInteger(index) || index < 0) return;
+
+    const file = this.getTodayFilename();
+    if (!fs.existsSync(file)) {
+      return;
+    }
+
+    const content = fs.readFileSync(file, 'utf8');
+    const lines = content.split('\n');
+    if (lines.length <= 2) {
+      // Only header or empty; just truncate the file.
+      fs.writeFileSync(file, lines[0] ? `${lines[0].trim()}\n` : '', { encoding: 'utf8' });
+      return;
+    }
+
+    const header = lines[0];
+    const dataLines = lines.slice(1).filter((l) => l.length > 0);
+
+    if (index >= dataLines.length) return;
+
+    dataLines.splice(index, 1);
+
+    const newContent = dataLines.length
+      ? `${header}\n${dataLines.join('\n')}\n`
+      : `${header}\n`;
+
+    fs.writeFileSync(file, newContent, { encoding: 'utf8' });
+  }
+
   getSummary() {
     const file = this.getTodayFilename();
     if (!fs.existsSync(file)) {
