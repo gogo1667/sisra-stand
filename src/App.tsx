@@ -5,6 +5,7 @@ type Item = {
   id: string
   name: string
   price: number
+  category: 'main' | 'side' | 'drink'
 }
 
 type LineItem = {
@@ -15,11 +16,19 @@ type LineItem = {
 }
 
 const ITEMS: Item[] = [
-  { id: 'hotdog', name: 'Hot Dog', price: 3.0 },
-  { id: 'burger', name: 'Burger', price: 5.0 },
-  { id: 'sprite', name: 'Sprite', price: 2.0 },
-  { id: 'water', name: 'Water', price: 1.5 },
-  { id: 'chips', name: 'Chips', price: 1.5 },
+  // mains
+  { id: 'hotdog', name: 'Hot Dog', price: 3.0, category: 'main' },
+  { id: 'brat', name: 'Brat', price: 4.0, category: 'main' },
+  { id: 'porksteak', name: 'Pork Steak', price: 6.0, category: 'main' },
+  { id: 'hamburger', name: 'Hamburger', price: 5.0, category: 'main' },
+  { id: 'cheeseburger', name: 'Cheeseburger', price: 5.5, category: 'main' },
+  // sides
+  { id: 'beans', name: 'Beans', price: 1.5, category: 'side' },
+  { id: 'coleslaw', name: 'Cole Slaw', price: 1.5, category: 'side' },
+  { id: 'chips', name: 'Chips', price: 1.5, category: 'side' },
+  // drinks
+  { id: 'water', name: 'Water', price: 1.0, category: 'drink' },
+  { id: 'soda', name: 'Soda', price: 2.0, category: 'drink' },
 ]
 
 function formatCurrency(value: number) {
@@ -34,6 +43,19 @@ function App() {
   >([])
 
   const cartItems = useMemo(() => Object.values(cart), [cart])
+
+  const mains = useMemo(
+    () => ITEMS.filter((i) => i.category === 'main').slice().sort((a, b) => a.name.localeCompare(b.name)),
+    []
+  )
+  const sides = useMemo(
+    () => ITEMS.filter((i) => i.category === 'side').slice().sort((a, b) => a.name.localeCompare(b.name)),
+    []
+  )
+  const drinks = useMemo(
+    () => ITEMS.filter((i) => i.category === 'drink').slice().sort((a, b) => a.name.localeCompare(b.name)),
+    []
+  )
 
   const subtotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -143,18 +165,57 @@ function App() {
       <main className="layout">
         <section className="items-panel">
           <h2>Items</h2>
-          <div className="item-grid">
-            {ITEMS.map((item) => (
-              <button
-                key={item.id}
-                className="item-button"
-                type="button"
-                onClick={() => handleAddItem(item)}
-              >
-                <span className="item-name">{item.name}</span>
-                <span className="item-price">{formatCurrency(item.price)}</span>
-              </button>
-            ))}
+          <div className="item-groups">
+            <div className="item-group">
+              <div className="item-group-header">Main dishes</div>
+              <div className="item-grid">
+                {mains.map((item) => (
+                  <button
+                    key={item.id}
+                    className="item-button"
+                    type="button"
+                    onClick={() => handleAddItem(item)}
+                  >
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-price">{formatCurrency(item.price)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="item-group">
+              <div className="item-group-header">Side dishes</div>
+              <div className="item-grid">
+                {sides.map((item) => (
+                  <button
+                    key={item.id}
+                    className="item-button"
+                    type="button"
+                    onClick={() => handleAddItem(item)}
+                  >
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-price">{formatCurrency(item.price)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="item-group">
+              <div className="item-group-header">Drinks</div>
+              <div className="item-grid">
+                {drinks.map((item) => (
+                  <button
+                    key={item.id}
+                    className="item-button"
+                    type="button"
+                    onClick={() => handleAddItem(item)}
+                  >
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-price">{formatCurrency(item.price)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
