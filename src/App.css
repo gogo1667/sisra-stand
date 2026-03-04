@@ -367,6 +367,29 @@ html[data-theme='light'] .item-price {
   color: var(--muted);
 }
 
+/* Align table columns consistently (both Current Order and Totals) */
+.cart-table th:nth-child(1),
+.cart-table td:nth-child(1) {
+  text-align: left;
+}
+
+.cart-table th:nth-child(2),
+.cart-table td:nth-child(2) {
+  text-align: center;
+}
+
+.cart-table th:nth-child(3),
+.cart-table td:nth-child(3),
+.cart-table th:nth-child(4),
+.cart-table td:nth-child(4) {
+  text-align: right;
+}
+
+.cart-table th:nth-child(5),
+.cart-table td:nth-child(5) {
+  text-align: center;
+}
+
 .small-button {
   border-radius: 999px;
   width: 1.6rem;
@@ -539,6 +562,12 @@ button:disabled {
 .totals-number {
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.totals-panel .cart-table thead th {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
 }
 
 /* Hide default number spinners for a cleaner cash input */

@@ -101,11 +101,9 @@ function App() {
     }
 
     fetchSummary()
-    const id = window.setInterval(fetchSummary, 3000)
 
     return () => {
       cancelled = true
-      window.clearInterval(id)
     }
   }, [view])
 
@@ -418,7 +416,7 @@ function App() {
                     <div className="totals-number">{formatCurrency(summary.totalRevenue)}</div>
                   </div>
                   <div>
-                    <div className="item-group-header">Lines recorded</div>
+                    <div className="item-group-header">Sales recorded</div>
                     <div className="totals-number">{summary.totalLines}</div>
                   </div>
                 </div>
