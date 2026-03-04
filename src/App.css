@@ -233,6 +233,10 @@ html[data-theme='light'] .item-price {
   gap: 1.25rem;
 }
 
+.totals-layout .items-panel {
+  grid-column: 1 / -1;
+}
+
 .items-panel,
 .checkout-panel {
   background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), var(--bg-alt));

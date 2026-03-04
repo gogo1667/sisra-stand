@@ -403,7 +403,7 @@ function App() {
           </section>
         </main>
       ) : (
-        <main className="layout">
+        <main className="layout totals-layout">
           <section className="items-panel">
             <h2>Totals</h2>
             {summaryLoading && <p className="empty-cart">Loading summary…</p>}
@@ -443,14 +443,6 @@ function App() {
             {!summaryLoading && !summaryError && !summary && (
               <p className="empty-cart">No summary yet. Record a sale first.</p>
             )}
-          </section>
-          <section className="checkout-panel">
-            <h2>How this works</h2>
-            <p className="empty-cart">
-              Every completed sale is written to a CSV file on the NestJS server for today. This screen
-              reads that CSV and shows totals. You can edit the CSV by hand if needed and refresh this
-              screen to see updates.
-            </p>
           </section>
         </main>
       )}
