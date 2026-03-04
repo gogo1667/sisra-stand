@@ -24,10 +24,16 @@ body {
   color: var(--text);
 }
 
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  background: radial-gradient(circle at top, #1f2937 0, #020617 55%, #000 100%);
+  color: var(--text);
+}
+
 #root {
   min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
   padding: 1.5rem;
 }
@@ -169,6 +175,8 @@ body {
   border-collapse: collapse;
   font-size: 0.9rem;
   margin-top: 0.35rem;
+  table-layout: fixed;
+  min-height: 9.5rem; /* keeps height steady between empty and filled */
 }
 
 .cart-table th,
@@ -238,8 +246,9 @@ body {
 .payment-row input {
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
-  padding: 0.45rem 0.9rem;
-  font-size: 0.95rem;
+  padding: 0.55rem 1.15rem;
+  font-size: 1rem;
+  min-width: 9rem;
   background: radial-gradient(circle at top, rgba(148, 163, 184, 0.26), rgba(15, 23, 42, 0.98));
   color: var(--text);
   outline: none;
@@ -354,6 +363,17 @@ button:disabled {
   border-top: 1px dashed rgba(148, 163, 184, 0.35);
   font-size: 0.82rem;
   color: var(--muted);
+}
+
+/* Hide default number spinners for a cleaner cash input */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
 }
 
 @media (max-width: 900px) {

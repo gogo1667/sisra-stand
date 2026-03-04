@@ -97,8 +97,8 @@ function App() {
     }))
 
     setSales((prev) => [...prev, ...saleLines])
-    // Reset cart but keep the cash field so you can see what you typed
     setCart({})
+    setCashGiven('')
   }
 
   const handleDownloadCsv = () => {
@@ -161,21 +161,25 @@ function App() {
         <section className="checkout-panel">
           <h2>Current Order</h2>
 
-          {cartItems.length === 0 ? (
-            <p className="empty-cart">No items yet. Tap buttons to add.</p>
-          ) : (
-            <table className="cart-table">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Qty</th>
-                  <th>Each</th>
-                  <th>Total</th>
-                  <th />
+          <table className="cart-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Each</th>
+                <th>Total</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {cartItems.length === 0 ? (
+                <tr className="cart-placeholder-row">
+                  <td colSpan={5} className="empty-cart">
+                    No items yet. Tap buttons to add.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {cartItems.map((item) => (
+              ) : (
+                cartItems.map((item) => (
                   <tr key={item.id}>
                     <td>{item.name}</td>
                     <td>{item.quantity}</td>
@@ -191,17 +195,17 @@ function App() {
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={3}>Subtotal</td>
-                  <td>{formatCurrency(subtotal)}</td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
-          )}
+                ))
+              )}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={3}>Subtotal</td>
+                <td>{formatCurrency(subtotal)}</td>
+                <td />
+              </tr>
+            </tfoot>
+          </table>
 
           <div className="payment-row">
             <label>
