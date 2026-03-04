@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 type Item = {
@@ -38,6 +38,8 @@ function formatCurrency(value: number) {
 function App() {
   const [cart, setCart] = useState<Record<string, LineItem>>({})
   const [cashGiven, setCashGiven] = useState<string>('')
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [menuOpen, setMenuOpen] = useState(false)
   const [sales, setSales] = useState<
     { timestamp: string; itemId: string; itemName: string; quantity: number; priceEach: number; total: number }[]
   >([])
@@ -56,6 +58,10 @@ function App() {
     () => ITEMS.filter((i) => i.category === 'drink').slice().sort((a, b) => a.name.localeCompare(b.name)),
     []
   )
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
 
   const subtotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -103,6 +109,7 @@ function App() {
   const handleClearCart = () => {
     setCart({})
     setCashGiven('')
+    setMenuOpen(false)
   }
 
   const handleCompleteSale = () => {
@@ -121,6 +128,7 @@ function App() {
     setSales((prev) => [...prev, ...saleLines])
     setCart({})
     setCashGiven('')
+    setMenuOpen(false)
   }
 
   const handleDownloadCsv = () => {
@@ -153,13 +161,50 @@ function App() {
     link.download = `sisra-sales-${today}.csv`
     link.click()
     URL.revokeObjectURL(url)
+    setMenuOpen(false)
+  }
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+    setMenuOpen(false)
   }
 
   return (
     <div className="app-root">
       <header className="app-header">
         <h1>SISRA Stand</h1>
-        <p>Tap items, take cash, see change, export CSV.</p>
+        <div className="app-header-right">
+          <button
+            type="button"
+            className="menu-trigger"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span className="menu-icon">
+              <span />
+              <span />
+              <span />
+            </span>
+          </button>
+          {menuOpen && (
+            <div className="app-menu">
+              <button
+                type="button"
+                className="menu-item"
+                onClick={handleToggleTheme}
+              >
+                {theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              </button>
+              <button
+                type="button"
+                className="menu-item"
+                onClick={handleDownloadCsv}
+                disabled={sales.length === 0}
+              >
+                Download CSV
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       <main className="layout">
@@ -315,14 +360,6 @@ function App() {
 
           <div className="sales-footer">
             <span>Sales this session: {sales.length} line(s)</span>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={handleDownloadCsv}
-              disabled={sales.length === 0}
-            >
-              Download CSV
-            </button>
           </div>
         </section>
       </main>
