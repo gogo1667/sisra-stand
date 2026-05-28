@@ -1,0 +1,5 @@
+timestamp,itemId,itemName,quantity,priceEach,total
+2026-03-05T17:29:38.411Z,cheeseburger,Cheeseburger,1,5.50,5.50
+2026-03-05T17:29:38.411Z,hotdog,Hot Dog,2,3.00,6.00
+2026-03-05T17:29:38.411Z,brat,Brat,1,4.00,4.00
+2026-03-05T17:29:45.990Z,hotdog,Hot Dog,3,3.00,9.00

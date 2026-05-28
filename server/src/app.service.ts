@@ -2,13 +2,17 @@ import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
-type SaleLine = {
+type SaleLineInput = {
   timestamp: string;
   itemId: string;
   itemName: string;
   quantity: number;
   priceEach: number;
   total: number;
+};
+
+type SaleLine = SaleLineInput & {
+  id: string;
 };
 
 @Injectable()
@@ -24,15 +28,29 @@ export class AppService {
     return path.join(dataDir, `sales-${today}.csv`);
   }
 
-  appendSale(lines: SaleLine[]): void {
+  appendSale(lines: SaleLineInput[]): void {
     if (!lines.length) return;
 
     const file = this.getTodayFilename();
     const exists = fs.existsSync(file);
-    const header = 'timestamp,itemId,itemName,quantity,priceEach,total';
+    let keepExisting = exists;
+
+    if (exists) {
+      const current = fs.readFileSync(file, 'utf8');
+      const firstNewline = current.indexOf('\n');
+      const headerLine = firstNewline === -1 ? current.trim() : current.slice(0, firstNewline).trim();
+      if (!headerLine.startsWith('id,')) {
+        // Old-format file without IDs; reset it so new rows have proper header.
+        keepExisting = false;
+      }
+    }
+
+    const header = 'id,timestamp,itemId,itemName,quantity,priceEach,total';
 
     const rows = lines.map((l) =>
       [
+        // simple unique-ish id per line
+        `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
         l.timestamp,
         l.itemId,
         l.itemName,
@@ -47,8 +65,13 @@ export class AppService {
         .join(','),
     );
 
-    const toWrite = (exists ? '' : `${header}\n`) + rows.join('\n') + '\n';
-    fs.appendFileSync(file, toWrite, { encoding: 'utf8' });
+    const toWrite = (keepExisting ? '' : `${header}\n`) + rows.join('\n') + '\n';
+
+    if (!keepExisting) {
+      fs.writeFileSync(file, toWrite, { encoding: 'utf8' });
+    } else {
+      fs.appendFileSync(file, toWrite, { encoding: 'utf8' });
+    }
   }
 
   getSales() {
@@ -71,17 +94,42 @@ export class AppService {
       const cols = this.parseCsvRow(row);
       if (cols.length < 6) continue;
 
-      const quantity = Number(cols[3] || '0');
-      const priceEach = Number(cols[4] || '0');
-      const total = Number(cols[5] || '0');
+      let id: string;
+      let timestamp: string;
+      let itemId: string;
+      let itemName: string;
+      let quantity: number;
+      let priceEach: number;
+      let total: number;
+
+      if (cols.length === 6) {
+        // Old format without id
+        timestamp = cols[0];
+        itemId = cols[1];
+        itemName = cols[2];
+        quantity = Number(cols[3] || '0');
+        priceEach = Number(cols[4] || '0');
+        total = Number(cols[5] || '0');
+        id = `${timestamp}-${itemId}-${i}`;
+      } else {
+        // New format with id
+        id = cols[0];
+        timestamp = cols[1];
+        itemId = cols[2];
+        itemName = cols[3];
+        quantity = Number(cols[4] || '0');
+        priceEach = Number(cols[5] || '0');
+        total = Number(cols[6] || '0');
+      }
 
       if (!Number.isFinite(quantity) || !Number.isFinite(priceEach) || !Number.isFinite(total)) continue;
 
       result.push({
         index: i - 1, // data index (excluding header)
-        timestamp: cols[0],
-        itemId: cols[1],
-        itemName: cols[2],
+        id,
+        timestamp,
+        itemId,
+        itemName,
         quantity,
         priceEach,
         total,
@@ -143,10 +191,24 @@ export class AppService {
       const cols = this.parseCsvRow(row);
       if (cols.length < 6) continue;
 
-      const itemId = cols[1];
-      const itemName = cols[2];
-      const quantity = Number(cols[3] || '0');
-      const total = Number(cols[5] || '0');
+      let itemId: string;
+      let itemName: string;
+      let quantity: number;
+      let total: number;
+
+      if (cols.length === 6) {
+        // Old format without id
+        itemId = cols[1];
+        itemName = cols[2];
+        quantity = Number(cols[3] || '0');
+        total = Number(cols[5] || '0');
+      } else {
+        // New format with id
+        itemId = cols[2];
+        itemName = cols[3];
+        quantity = Number(cols[4] || '0');
+        total = Number(cols[6] || '0');
+      }
 
       if (!Number.isFinite(quantity) || !Number.isFinite(total)) continue;
 

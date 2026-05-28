@@ -16,6 +16,7 @@ type LineItem = {
 }
 
 type Transaction = {
+  id: string
   index: number
   timestamp: string
   itemId: string
@@ -27,22 +28,37 @@ type Transaction = {
 
 const ITEMS: Item[] = [
   // mains
+  { id: 'porksteak', name: 'Pork Steak', price: 9.0, category: 'main' },
+  { id: 'pulled-pork-nachos', name: 'Pulled Pork Nachos', price: 8.0, category: 'main' },
+  { id: 'pulled-pork', name: 'Pulled Pork', price: 6.0, category: 'main' },
+  { id: 'hamburger', name: 'Hamburger', price: 6.0, category: 'main' },
+  { id: 'cheeseburger', name: 'Cheeseburger', price: 6.0, category: 'main' },
+  { id: 'brat', name: 'Bratwurst', price: 5.0, category: 'main' },
+  { id: 'nachos-cheese', name: 'Nachos w/Cheese', price: 4.0, category: 'main' },
   { id: 'hotdog', name: 'Hot Dog', price: 3.0, category: 'main' },
-  { id: 'brat', name: 'Brat', price: 4.0, category: 'main' },
-  { id: 'porksteak', name: 'Pork Steak', price: 6.0, category: 'main' },
-  { id: 'hamburger', name: 'Hamburger', price: 5.0, category: 'main' },
-  { id: 'cheeseburger', name: 'Cheeseburger', price: 5.5, category: 'main' },
-  // sides
-  { id: 'beans', name: 'Beans', price: 1.5, category: 'side' },
-  { id: 'coleslaw', name: 'Cole Slaw', price: 1.5, category: 'side' },
-  { id: 'chips', name: 'Chips', price: 1.5, category: 'side' },
-  // drinks
-  { id: 'water', name: 'Water', price: 1.0, category: 'drink' },
-  { id: 'soda', name: 'Soda', price: 2.0, category: 'drink' },
+  // sides ($1 each — soda, beer & snacks at park concession)
+  { id: 'coleslaw', name: 'Slaw', price: 1.0, category: 'side' },
+  { id: 'potato-salad', name: 'Potato Salad', price: 1.0, category: 'side' },
+  { id: 'beans', name: 'Baked Beans', price: 1.0, category: 'side' },
+  { id: 'chips', name: 'Chips', price: 1.0, category: 'side' },
 ]
 
 function formatCurrency(value: number) {
   return `$${value.toFixed(2)}`
+}
+
+/** Sort A–Z, then order for a 2-col grid: down the left column, then down the right. */
+function columnMajorOrder(items: Item[], columns = 2): Item[] {
+  const sorted = items.slice().sort((a, b) => a.name.localeCompare(b.name))
+  const rows = Math.ceil(sorted.length / columns)
+  const result: Item[] = []
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < columns; c++) {
+      const index = c * rows + r
+      if (index < sorted.length) result.push(sorted[index])
+    }
+  }
+  return result
 }
 
 function App() {
@@ -57,18 +73,9 @@ function App() {
 
   const cartItems = useMemo(() => Object.values(cart), [cart])
 
-  const mains = useMemo(
-    () => ITEMS.filter((i) => i.category === 'main').slice().sort((a, b) => a.name.localeCompare(b.name)),
-    []
-  )
-  const sides = useMemo(
-    () => ITEMS.filter((i) => i.category === 'side').slice().sort((a, b) => a.name.localeCompare(b.name)),
-    []
-  )
-  const drinks = useMemo(
-    () => ITEMS.filter((i) => i.category === 'drink').slice().sort((a, b) => a.name.localeCompare(b.name)),
-    []
-  )
+  const mains = useMemo(() => columnMajorOrder(ITEMS.filter((i) => i.category === 'main')), [])
+  const sides = useMemo(() => columnMajorOrder(ITEMS.filter((i) => i.category === 'side')), [])
+  const drinks = useMemo(() => columnMajorOrder(ITEMS.filter((i) => i.category === 'drink')), [])
 
   const [summary, setSummary] = useState<{
     totalRevenue: number
@@ -361,22 +368,24 @@ function App() {
                 </div>
               </div>
 
-              <div className="item-group">
-                <div className="item-group-header">Drinks</div>
-                <div className="item-grid">
-                  {drinks.map((item) => (
-                    <button
-                      key={item.id}
-                      className="item-button"
-                      type="button"
-                      onClick={() => handleAddItem(item)}
-                    >
-                      <span className="item-name">{item.name}</span>
-                      <span className="item-price">{formatCurrency(item.price)}</span>
-                    </button>
-                  ))}
+              {drinks.length > 0 && (
+                <div className="item-group">
+                  <div className="item-group-header">Drinks</div>
+                  <div className="item-grid">
+                    {drinks.map((item) => (
+                      <button
+                        key={item.id}
+                        className="item-button"
+                        type="button"
+                        onClick={() => handleAddItem(item)}
+                      >
+                        <span className="item-name">{item.name}</span>
+                        <span className="item-price">{formatCurrency(item.price)}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
 
@@ -533,6 +542,7 @@ function App() {
                 <table className="cart-table">
                   <thead>
                     <tr>
+                      <th>ID</th>
                       <th>Time</th>
                       <th>Item</th>
                       <th>Qty</th>
@@ -544,6 +554,7 @@ function App() {
                   <tbody>
                     {transactions.map((t) => (
                       <tr key={t.index}>
+                        <td>{t.id}</td>
                         <td>{new Date(t.timestamp).toLocaleTimeString()}</td>
                         <td>{t.itemName}</td>
                         <td>{t.quantity}</td>
